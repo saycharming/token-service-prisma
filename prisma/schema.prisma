@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client"
+  output = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Token {
+  id        String   @id @default(cuid())
+  userId    String
+  scopes    String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  token     String   @unique
+}
