@@ -94,7 +94,7 @@ These functions are covered by unit tests.
 
 - **Next.js 16** (App Router) + **TypeScript**
 - **Prisma 7** + SQLite
-- **Tailwind CSS** for a minimal UI (optional)
+- **Tailwind CSS** for a minimal UI
 - **Jest + ts-jest** for unit testing
 - **Docker** for containerized runtime
 
