@@ -4,7 +4,8 @@ import { prisma } from '@/lib/prisma';
 import {
   validateCreateTokenRequest,
   TokenResponse,
-} from '@/lib/validation';
+} from '../../../lib/validation';
+import { computeExpiresAt, isTokenExpired } from '../../../lib/token';
 
 function toTokenResponse(token: {
   id: string;
@@ -32,8 +33,33 @@ function toTokenResponse(token: {
   };
 }
 
+function authorize(req: NextRequest): NextResponse | null {
+  const configuredKey = process.env.API_KEY;
+  const headerKey = req.headers.get('x-api-key');
+
+  if (!configuredKey) {
+    console.warn('API_KEY is not set. Rejecting request.');
+    return NextResponse.json(
+      { error: 'Service not configured' },
+      { status: 500 }
+    );
+  }
+
+  if (!headerKey || headerKey !== configuredKey) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
+  return null;
+}
+
 // POST /api/tokens
 export async function POST(req: NextRequest) {
+  const authError = authorize(req);
+  if (authError) return authError;
+
   try {
     const json = await req.json();
     const result = validateCreateTokenRequest(json);
@@ -46,9 +72,8 @@ export async function POST(req: NextRequest) {
     }
 
     const { userId, scopes, expiresInMinutes } = result.value;
-
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + expiresInMinutes * 60_000);
+    const expiresAt = computeExpiresAt(now, expiresInMinutes);
 
     const tokenValue = randomBytes(32).toString('hex');
 
@@ -74,6 +99,9 @@ export async function POST(req: NextRequest) {
 
 // GET /api/tokens?userId=123
 export async function GET(req: NextRequest) {
+  const authError = authorize(req);
+  if (authError) return authError;
+
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
@@ -90,16 +118,15 @@ export async function GET(req: NextRequest) {
     const tokens = await prisma.token.findMany({
       where: {
         userId: userId.trim(),
-        expiresAt: {
-          gt: now,
-        },
       },
       orderBy: {
         createdAt: 'desc',
       },
     });
 
-    const response: TokenResponse[] = tokens.map(toTokenResponse);
+    const activeTokens = tokens.filter(t => !isTokenExpired(t.expiresAt, now));
+
+    const response: TokenResponse[] = activeTokens.map(toTokenResponse);
 
     return NextResponse.json(response, { status: 200 });
   } catch (err) {

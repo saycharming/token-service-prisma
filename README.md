@@ -2,22 +2,33 @@
 
 This is a small token management service built with **Next.js (App Router)** and **TypeScript**.
 
-It implements:
+It demonstrates:
 
-- `POST /api/tokens` – create a new token for a user with scopes and expiry
-- `GET /api/tokens?userId=...` – list all non-expired tokens for a user
+- A minimal token API with persistence
+- Basic header-based authentication
+- Simple domain logic with unit tests
+- Dockerized runtime
 
-Tokens are persisted in a SQLite database using Prisma.
+There is **no `src/` directory** – the app uses the default Next.js structure:
 
-## Stack
+- `app/` – routes and pages
+- `lib/` – reusable logic (Prisma client, token helpers, validation, etc.)
+- `prisma/` – Prisma schema and migrations
+- `generated/` – Prisma client (Prisma 7)
 
-- Next.js 15 (App Router) + TypeScript
-- Prisma ORM + SQLite
-- Tailwind CSS for a minimal UI
+---
 
-## Running locally
+## Features
 
-```bash
-npm install
-npx prisma migrate dev --name init
-npm run dev
+### API Endpoints
+
+- `POST /api/tokens`  
+  Create a token for a given user with scopes and expiry.
+
+- `GET /api/tokens?userId=...`  
+  List all **non-expired** tokens for a given user.
+
+Both endpoints require an API key header:
+
+```http
+x-api-key: <your-api-key>
