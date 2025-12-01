@@ -31,7 +31,7 @@ There is **no `src/` directory** – the app uses the default Next.js structure:
 Both endpoints are protected by a simple API key header:
 
 ```http
-x-api-key: <your-api-key>
+x-api-key: local-dev-api-key
 ```
 
 The value must match the `API_KEY` environment variable configured on the server.
