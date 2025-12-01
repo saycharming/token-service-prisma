@@ -4,8 +4,8 @@ import { prisma } from '@/lib/prisma';
 import {
   validateCreateTokenRequest,
   TokenResponse,
-} from '../../../lib/validation';
-import { computeExpiresAt, isTokenExpired } from '../../../lib/token';
+} from '@/lib/validation';
+import { computeExpiresAt, isTokenExpired } from '@/lib/token';
 
 function toTokenResponse(token: {
   id: string;
